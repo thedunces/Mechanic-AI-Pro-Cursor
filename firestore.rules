@@ -1,0 +1,77 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function validOptionalString(data, field, maxLength) {
+      return !(field in data) ||
+        (data[field] is string && data[field].size() <= maxLength);
+    }
+
+    function validVehicle(data, userId, vehicleId) {
+      return data.userId == userId
+        && data.id == vehicleId
+        && data.make is string
+        && data.make.size() > 0
+        && data.make.size() <= 80
+        && data.model is string
+        && data.model.size() > 0
+        && data.model.size() <= 80
+        && data.year is int
+        && data.year >= 1886
+        && data.year <= 2100
+        && validOptionalString(data, 'vin', 17)
+        && validOptionalString(data, 'engine', 120)
+        && validOptionalString(data, 'trim', 120)
+        && validOptionalString(data, 'nickname', 80);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create, update: if isOwner(userId)
+        && request.resource.data.keys().hasOnly([
+          'id', 'isAnonymous', 'displayName', 'email', 'createdAt', 'lastLoginAt'
+        ])
+        && validOptionalString(request.resource.data, 'displayName', 100)
+        && validOptionalString(request.resource.data, 'email', 320);
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/vehicles/{vehicleId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && validVehicle(request.resource.data, userId, vehicleId);
+      allow update: if isOwner(userId)
+        && validVehicle(request.resource.data, userId, vehicleId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['vin', 'make', 'model', 'year', 'engine', 'trim', 'nickname', 'updatedAt']);
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/sessions/{sessionId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId)
+        && request.resource.data.userId == userId
+        && request.resource.data.id == sessionId
+        && request.resource.data.vehicleId is string
+        && request.resource.data.vehicleName is string
+        && request.resource.data.vehicleName.size() <= 200
+        && request.resource.data.createdAt is timestamp;
+      allow update: if false;
+      allow delete: if isOwner(userId);
+    }
+
+    // Entitlements and usage are authoritative server-managed records.
+    match /users/{userId}/entitlements/{document=**} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+
+    match /users/{userId}/usage/{document=**} {
+      allow read: if isOwner(userId);
+      allow write: if false;
+    }
+  }
+}
