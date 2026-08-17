@@ -4,7 +4,7 @@ An Android diagnostic app for DIY automotive mechanics, written in Kotlin with J
 
 ## Features Implemented
 
-- **Anonymous authentication** with Firebase Auth, upgradeable to Google Sign-In.
+- **Guest, email, and Google authentication** with Firebase Auth. Guest accounts can be linked so data and subscriptions restore.
 - **Modern Jetpack Compose UI** with Material 3, type-safe navigation, and a dashboard.
 - **Vehicle management** with VIN decoding via the free NHTSA vPIC API and Firestore persistence.
 - **Manual diagnosis** with OBD-II codes, live data parameters, symptoms, and notes.
@@ -12,7 +12,7 @@ An Android diagnostic app for DIY automotive mechanics, written in Kotlin with J
 - **Bluetooth OBD-II scanning** for ELM327 adapters: read/clear DTCs and read live data.
 - **Diagnosis history** stored per user in Firestore.
 - **Firebase Security Rules** and **App Check** (debug for development, Play Integrity for production).
-- **Production checklist** and **privacy policy** drafts for Google Play Store readiness.
+- **Production hardening**: Play Integrity App Check, R8, account deletion, hosted privacy/terms, in-app review, and Play Real-time Developer Notifications.
 
 ## Tech Stack
 
@@ -35,7 +35,9 @@ app/                  Android application
 functions/            Firebase Cloud Functions (TypeScript)
 firestore.rules       Firestore security rules
 firestore.indexes.json Firestore indexes
-PRIVACY_POLICY.md     Draft privacy policy
+public/               Hosted privacy policy and terms
+PRIVACY_POLICY.md     Privacy policy source
+TERMS_OF_SERVICE.md   Terms of service source
 PRODUCTION_CHECKLIST.md  Pre-launch checklist
 ```
 
@@ -45,17 +47,17 @@ PRODUCTION_CHECKLIST.md  Pre-launch checklist
 2. Open this folder in Android Studio.
 3. Create a Firebase project at [https://console.firebase.google.com](https://console.firebase.google.com).
 4. Add an Android app with package name `com.mechanicai.pro` and download `google-services.json` into `app/`.
-5. Enable **Anonymous** authentication in Firebase Auth. Optionally enable **Google** sign-in.
-6. Create a Cloud Firestore database and deploy `firestore.rules` and `firestore.indexes.json`.
-7. In `functions/`, the `GOOGLE_API_KEY` is already configured in `.env` for development. For production, set it as a secret or environment variable via Firebase:
+5. Enable **Anonymous**, **Email/Password**, and **Google** authentication. Add SHA-1/SHA-256 fingerprints for debug and release keystores.
+6. Create a Cloud Firestore database and deploy rules, indexes, functions, and hosting:
    ```bash
    cd functions
    npm install
-   firebase deploy --only functions
+   firebase functions:secrets:set GOOGLE_API_KEY
+   firebase deploy
    ```
-   If you deploy to production, use `firebase functions:secrets:set GOOGLE_API_KEY` or `firebase functions:env:set GOOGLE_API_KEY=YOUR_KEY`.
-   Make sure the [Generative Language API](https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com) is enabled for the API key in Google Cloud Console.
-8. Register the app in Google Play Console and enable Play Integrity API for App Check in production.
+   Enable the [Generative Language API](https://console.cloud.google.com/apis/library/generativelanguage.googleapis.com) for the API key.
+7. Create `keystore.properties` from `keystore.properties.example` and a release keystore. See `PRODUCTION_CHECKLIST.md`.
+8. Register the app in Google Play Console, create subscription `mechanic_ai_pro_monthly` / base plan `monthly`, enable Play Integrity, and point Real-time Developer Notifications at the `play-rtdn` Pub/Sub topic.
 9. Sync Gradle and run the app.
 
 ### Note on Gradle Wrapper
@@ -74,7 +76,7 @@ if you have a local Gradle installation.
 | 2 | Completed | Vehicle management, NHTSA vPIC integration, Firestore CRUD, security rules |
 | 3 | Completed | Manual diagnosis flow, Cloud Function AI endpoint, diagnosis result display, history |
 | 4 | Completed | Bluetooth OBD-II ELM327 scanning, read/clear codes, live data, AI diagnosis from scan |
-| 5 | Completed | Production hardening stubs, privacy policy, checklist, RAG ingestion stub, App Check config |
+| 5 | Completed | Production hardening: legal pages, account deletion, Google Sign-In, RTDN, R8, Play review |
 
 ## Important Notes
 

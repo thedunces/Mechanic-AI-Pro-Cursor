@@ -1,5 +1,6 @@
 package com.mechanicai.pro.presentation.settings
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -11,7 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -23,24 +26,66 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mechanicai.pro.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onOpenPrivacyPolicy: () -> Unit = {},
+    onOpenPrivacyPolicy: () -> Unit,
+    onOpenTermsOfService: () -> Unit,
     onManagePlan: () -> Unit,
+    onAccountDeleted: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    val activity = context as? Activity
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isDeleted) {
+        if (uiState.isDeleted) {
+            onAccountDeleted()
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Delete account?") },
+            text = { Text(stringResource(R.string.delete_account_warning)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteAccount()
+                    }
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -72,7 +117,7 @@ fun SettingsScreen(
 
             Button(
                 onClick = onManagePlan,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text("View AI plans and usage")
             }
@@ -89,23 +134,35 @@ fun SettingsScreen(
                         .padding(16.dp)
                 ) {
                     Text(
-                        text = if (uiState.isAnonymous) "Signed in anonymously" else "Signed in as ${uiState.email ?: "unknown"}",
+                        text = if (uiState.isAnonymous) {
+                            "Signed in as a guest"
+                        } else {
+                            "Signed in as ${uiState.email ?: "your account"}"
+                        },
                         style = MaterialTheme.typography.bodyLarge
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                     if (uiState.isAnonymous) {
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Link your account to keep your data if you switch devices or reinstall the app.",
+                            text = "Link an email or Google account to keep your vehicles, history, and subscription if you switch devices.",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(
+                            onClick = { activity?.let(viewModel::linkWithGoogle) },
+                            enabled = !uiState.isLoading && activity != null,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Link Google account")
+                        }
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = uiState.linkEmail,
                             onValueChange = viewModel::updateLinkEmail,
                             label = { Text("Email") },
                             singleLine = true,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
@@ -114,13 +171,13 @@ fun SettingsScreen(
                             label = { Text("Password") },
                             singleLine = true,
                             visualTransformation = PasswordVisualTransformation(),
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedButton(
                             onClick = viewModel::linkWithEmail,
                             enabled = !uiState.isLoading,
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Link email account")
                         }
@@ -133,6 +190,13 @@ fun SettingsScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Privacy Policy")
+            }
+
+            OutlinedButton(
+                onClick = onOpenTermsOfService,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Terms of Service")
             }
 
             if (uiState.isLoading) {
@@ -158,18 +222,19 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Production Notes",
+                text = "Danger zone",
                 style = MaterialTheme.typography.titleLarge
             )
-            Text(
-                text = "• Replace App Check debug provider with Play Integrity in production.\n" +
-                    "• Add a privacy policy URL before publishing to Google Play.\n" +
-                    "• Set up RAG ingestion only from public-domain or licensed repair manuals.\n" +
-                    "• Configure release signing and R8/proguard rules.\n" +
-                    "• Add in-app review API after a successful diagnosis.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
+            Button(
+                onClick = { showDeleteDialog = true },
+                enabled = !uiState.isLoading,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Delete account and data")
+            }
         }
     }
 }

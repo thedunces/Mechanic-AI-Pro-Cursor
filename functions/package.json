@@ -1,7 +1,7 @@
 {
   "name": "mechanic-ai-pro-functions",
   "description": "Firebase Cloud Functions for Mechanic AI Pro",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",

@@ -29,7 +29,7 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0-alpha"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -133,8 +133,17 @@ dependencies {
     // Google Play Services (Sign-In)
     implementation("com.google.android.gms:play-services-auth:21.2.0")
 
-    // Google Play Billing subscriptions
+    // Google Play Billing subscriptions and in-app review
     implementation("com.android.billingclient:billing-ktx:9.1.0")
+    implementation("com.google.android.play:review-ktx:2.0.2")
+
+    // Credential Manager / Google Sign-In
+    implementation("androidx.credentials:credentials:1.5.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    // Custom Tabs for privacy policy and terms
+    implementation("androidx.browser:browser:1.8.0")
 
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.11.0")

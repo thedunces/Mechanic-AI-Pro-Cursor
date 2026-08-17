@@ -4,7 +4,16 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- Wrench head -->
+    <path
+        android:fillColor="#FFF4B942"
+        android:pathData="M46,30 C41,30 37,34 37,39 C37,42 38.5,44.5 41,46 L36,51 L40,55 L45,50 C46.5,52.5 49,54 52,54 C57,54 61,50 61,45 C61,43 60.4,41.2 59.3,39.7 L54,45 L50,41 L55.3,35.7 C53.8,32.3 50.2,30 46,30 Z M46,36 C47.7,36 49,37.3 49,39 C49,40.7 47.7,42 46,42 C44.3,42 43,40.7 43,39 C43,37.3 44.3,36 46,36 Z" />
+    <!-- Wrench handle -->
+    <path
+        android:fillColor="#FFF4B942"
+        android:pathData="M52,52 L72,72 C74,74 74,77 72,79 C70,81 67,81 65,79 L45,59 Z" />
+    <!-- Spark / diagnostic mark -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M54,28 L80,42 L80,66 L54,80 L28,66 L28,42 Z" />
+        android:pathData="M68,34 L64,46 L70,46 L66,58 L78,42 L71,42 L74,34 Z" />
 </vector>

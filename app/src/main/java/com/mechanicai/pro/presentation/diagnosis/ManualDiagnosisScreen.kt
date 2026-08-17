@@ -41,11 +41,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mechanicai.pro.data.model.DiagnosisResult
 import com.mechanicai.pro.data.model.LiveDataParameter
 import com.mechanicai.pro.data.model.Severity
 import com.mechanicai.pro.data.model.Vehicle
+import com.mechanicai.pro.presentation.components.SafetyDisclaimer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -86,6 +88,7 @@ fun ManualDiagnosisScreen(
                     onReset = viewModel::clearResult
                 )
             } else {
+                SafetyDisclaimer()
                 DiagnosisInputContent(
                     vehicles = vehicles,
                     selectedVehicle = uiState.selectedVehicle,
@@ -102,7 +105,9 @@ fun ManualDiagnosisScreen(
                     onNotesChange = viewModel::updateNotes,
                     isLoading = uiState.isLoading,
                     errorMessage = uiState.errorMessage,
-                    onDiagnose = { viewModel.diagnose {} },
+                    onDiagnose = {
+                        viewModel.diagnose(LocalContext.current as? android.app.Activity)
+                    },
                     onBack = onBack
                 )
             }

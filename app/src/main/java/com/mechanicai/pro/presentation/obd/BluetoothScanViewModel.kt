@@ -12,8 +12,11 @@ import com.mechanicai.pro.data.model.DiagnosisResult
 import com.mechanicai.pro.data.model.DiagnosticInputs
 import com.mechanicai.pro.data.model.LiveDataParameter
 import com.mechanicai.pro.data.model.Vehicle
+import android.app.Activity
+import com.mechanicai.pro.data.billing.SubscriptionManager
 import com.mechanicai.pro.data.remote.obd.BluetoothObdManager
 import com.mechanicai.pro.data.repository.DiagnosisRepository
+import com.mechanicai.pro.data.review.InAppReviewRequester
 import com.mechanicai.pro.data.repository.VehicleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +30,8 @@ class BluetoothScanViewModel @Inject constructor(
     private val obdManager: BluetoothObdManager,
     private val vehicleRepository: VehicleRepository,
     private val diagnosisRepository: DiagnosisRepository,
+    private val subscriptionManager: SubscriptionManager,
+    private val reviewRequester: InAppReviewRequester,
     private val context: Context
 ) : ViewModel() {
 
@@ -142,7 +147,13 @@ class BluetoothScanViewModel @Inject constructor(
         }
     }
 
-    fun diagnose(vehicle: Vehicle, onComplete: (DiagnosisResult) -> Unit) {
+    fun diagnose(vehicle: Vehicle, activity: Activity? = null, onComplete: (DiagnosisResult) -> Unit = {}) {
+        if (subscriptionManager.state.value.remaining <= 0) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "You have used all AI diagnoses for this month. Upgrade to Pro or wait until your usage resets."
+            )
+            return
+        }
         val state = _uiState.value
         val inputs = DiagnosticInputs(
             obdCodes = state.codes,
@@ -151,9 +162,8 @@ class BluetoothScanViewModel @Inject constructor(
             notes = ""
         )
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true, errorMessage = null, result = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, result = null)
             val result = diagnosisRepository.diagnose(vehicle, inputs)
-            _uiState.value = state.copy(isLoading = false)
             result.fold(
                 onSuccess = { diagnosis ->
                     val session = com.mechanicai.pro.data.model.DiagnosticSession(
@@ -163,11 +173,15 @@ class BluetoothScanViewModel @Inject constructor(
                         result = diagnosis
                     )
                     diagnosisRepository.saveSession(session)
-                    _uiState.value = state.copy(result = diagnosis)
+                    _uiState.value = _uiState.value.copy(isLoading = false, result = diagnosis)
+                    if (activity != null) {
+                        reviewRequester.launch(activity)
+                    }
                     onComplete(diagnosis)
                 },
                 onFailure = { error ->
-                    _uiState.value = state.copy(
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
                         errorMessage = error.message ?: "Diagnosis failed"
                     )
                 }

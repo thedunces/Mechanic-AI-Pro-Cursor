@@ -7,20 +7,24 @@ import com.mechanicai.pro.data.model.DiagnosticInputs
 import com.mechanicai.pro.data.model.DiagnosticSession
 import com.mechanicai.pro.data.model.LiveDataParameter
 import com.mechanicai.pro.data.model.Vehicle
+import android.app.Activity
+import com.mechanicai.pro.data.billing.SubscriptionManager
 import com.mechanicai.pro.data.repository.DiagnosisRepository
+import com.mechanicai.pro.data.review.InAppReviewRequester
 import com.mechanicai.pro.data.repository.VehicleRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ManualDiagnosisViewModel @Inject constructor(
     private val vehicleRepository: VehicleRepository,
-    private val diagnosisRepository: DiagnosisRepository
+    private val diagnosisRepository: DiagnosisRepository,
+    private val subscriptionManager: SubscriptionManager,
+    private val reviewRequester: InAppReviewRequester
 ) : ViewModel() {
 
     private val _vehicles = MutableStateFlow<List<Vehicle>>(emptyList())
@@ -82,10 +86,16 @@ class ManualDiagnosisViewModel @Inject constructor(
         )
     }
 
-    fun diagnose(onComplete: (DiagnosisResult) -> Unit) {
+    fun diagnose(activity: Activity? = null, onComplete: (DiagnosisResult) -> Unit = {}) {
         val vehicle = _uiState.value.selectedVehicle
         if (vehicle == null) {
             _uiState.value = _uiState.value.copy(errorMessage = "Please select a vehicle first")
+            return
+        }
+        if (subscriptionManager.state.value.remaining <= 0) {
+            _uiState.value = _uiState.value.copy(
+                errorMessage = "You have used all AI diagnoses for this month. Upgrade to Pro or wait until your usage resets."
+            )
             return
         }
 
@@ -110,6 +120,9 @@ class ManualDiagnosisViewModel @Inject constructor(
                     )
                     diagnosisRepository.saveSession(session)
                     _uiState.value = _uiState.value.copy(result = diagnosis)
+                    if (activity != null) {
+                        reviewRequester.launch(activity)
+                    }
                     onComplete(diagnosis)
                 },
                 onFailure = { error ->

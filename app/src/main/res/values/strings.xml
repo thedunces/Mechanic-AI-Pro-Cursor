@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Mechanic AI Pro</string>
+    <string name="privacy_policy_url">https://mechanic-ai-pro-final.web.app/privacy.html</string>
+    <string name="terms_of_service_url">https://mechanic-ai-pro-final.web.app/terms.html</string>
+    <string name="safety_disclaimer">AI diagnostic advice is not a substitute for a licensed mechanic. Follow vehicle safety procedures, use jack stands, and seek professional help for brakes, airbags, steering, fuel, or any issue that could make the vehicle unsafe to drive.</string>
+    <string name="quota_exhausted">You have used all AI diagnoses for this month. Upgrade to Pro or wait until your usage resets.</string>
+    <string name="sign_out_anonymous_warning">You are signed in as a guest. Signing out will permanently lose this device\'s vehicles, history, and unused diagnoses unless you link an email or Google account first.</string>
+    <string name="delete_account_warning">This permanently deletes your account, vehicles, diagnosis history, and usage records. Active subscriptions must be canceled in Google Play.</string>
 </resources>

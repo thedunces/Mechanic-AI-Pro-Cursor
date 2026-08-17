@@ -76,7 +76,7 @@ fun SubscriptionScreen(
 
             if (state.requiresAccountUpgrade && !state.isPro) {
                 Text(
-                    text = "Before subscribing, open Settings and link an email account. " +
+                    text = "Before subscribing, open Settings and link an email or Google account. " +
                         "This protects your subscription and lets you restore it on another device.",
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,

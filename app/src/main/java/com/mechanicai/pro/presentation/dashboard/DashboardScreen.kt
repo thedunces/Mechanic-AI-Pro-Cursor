@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material.icons.filled.Build
@@ -26,14 +25,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.mechanicai.pro.R
 import com.mechanicai.pro.presentation.components.ActionCard
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,6 +57,38 @@ fun DashboardScreen(
 ) {
     val user by viewModel.user.collectAsState()
     val subscription by viewModel.subscription.collectAsState()
+    var showSignOutDialog by remember { mutableStateOf(false) }
+
+    if (showSignOutDialog) {
+        AlertDialog(
+            onDismissRequest = { showSignOutDialog = false },
+            title = { Text("Sign out?") },
+            text = {
+                Text(
+                    if (user?.isAnonymous == true) {
+                        stringResource(R.string.sign_out_anonymous_warning)
+                    } else {
+                        "You can sign back in with the same email or Google account to restore your data."
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutDialog = false
+                        onSignOut()
+                    }
+                ) {
+                    Text("Sign out")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -61,7 +99,7 @@ fun DashboardScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 actions = {
-                    IconButton(onClick = onSignOut) {
+                    IconButton(onClick = { showSignOutDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Logout,
                             contentDescription = "Sign out",
@@ -130,15 +168,8 @@ fun DashboardScreen(
             )
 
             ActionCard(
-                title = "Live Data Log",
-                subtitle = "Browse recorded sensor readings",
-                icon = Icons.AutoMirrored.Default.List,
-                onClick = onNavigateToHistory
-            )
-
-            ActionCard(
                 title = "Settings",
-                subtitle = "Account linking, privacy, and production info",
+                subtitle = "Account, privacy, and subscription",
                 icon = Icons.Default.Settings,
                 onClick = onNavigateToSettings
             )

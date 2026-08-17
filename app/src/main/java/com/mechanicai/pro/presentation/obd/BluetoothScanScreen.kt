@@ -41,12 +41,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.mechanicai.pro.data.model.DiagnosisResult
 import com.mechanicai.pro.data.model.Severity
 import com.mechanicai.pro.data.model.Vehicle
 import com.mechanicai.pro.data.remote.obd.BluetoothObdManager
+import com.mechanicai.pro.presentation.components.SafetyDisclaimer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -134,6 +136,7 @@ fun BluetoothScanScreen(
                     onReset = viewModel::clearResult
                 )
             } else {
+                SafetyDisclaimer()
                 BluetoothScanContent(
                     uiState = uiState,
                     vehicles = vehicles,
@@ -144,7 +147,10 @@ fun BluetoothScanScreen(
                     onClearCodes = viewModel::clearCodes,
                     onReadLiveData = viewModel::readLiveData,
                     onDiagnose = { vehicle ->
-                        viewModel.diagnose(vehicle) {}
+                        viewModel.diagnose(
+                            vehicle,
+                            LocalContext.current as? android.app.Activity
+                        )
                     },
                     onSelectVehicle = viewModel::selectVehicle
                 )

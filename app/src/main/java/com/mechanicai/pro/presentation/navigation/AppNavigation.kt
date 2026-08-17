@@ -1,8 +1,13 @@
 package com.mechanicai.pro.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -10,6 +15,7 @@ import androidx.navigation.compose.rememberNavController
 import com.mechanicai.pro.presentation.dashboard.DashboardScreen
 import com.mechanicai.pro.presentation.diagnosis.ManualDiagnosisScreen
 import com.mechanicai.pro.presentation.history.HistoryScreen
+import com.mechanicai.pro.presentation.legal.LegalLinks
 import com.mechanicai.pro.presentation.obd.BluetoothScanScreen
 import com.mechanicai.pro.presentation.settings.SettingsScreen
 import com.mechanicai.pro.presentation.splash.SplashScreen
@@ -17,15 +23,25 @@ import com.mechanicai.pro.presentation.subscription.SubscriptionScreen
 import com.mechanicai.pro.presentation.vehicle.AddVehicleScreen
 import com.mechanicai.pro.presentation.vehicle.VehicleListScreen
 
-/**
- * Root navigation host. Handles anonymous sign-in splash and main app graph.
- */
 @Composable
 fun AppNavigation(
     mainViewModel: MainViewModel = hiltViewModel()
 ) {
     val navController = rememberNavController()
+    val context = LocalContext.current
     val isAuthenticated by mainViewModel.isAuthenticated.collectAsState()
+    var hadSession by remember { mutableStateOf(isAuthenticated) }
+
+    LaunchedEffect(isAuthenticated) {
+        if (isAuthenticated) {
+            hadSession = true
+        } else if (hadSession) {
+            navController.navigate(NavRoutes.Splash) {
+                popUpTo(0) { inclusive = true }
+            }
+            hadSession = false
+        }
+    }
 
     val startDestination = if (isAuthenticated) NavRoutes.Dashboard else NavRoutes.Splash
 
@@ -73,7 +89,6 @@ fun AppNavigation(
             )
         }
         composable<NavRoutes.DiagnosisResult> {
-            // DiagnosisResultScreen will be implemented in Phase 3.
             ManualDiagnosisScreen(
                 onBack = { navController.popBackStack() }
             )
@@ -86,8 +101,10 @@ fun AppNavigation(
         composable<NavRoutes.Settings> {
             SettingsScreen(
                 onBack = { navController.popBackStack() },
-                onOpenPrivacyPolicy = { /* Open privacy policy URL in production */ },
+                onOpenPrivacyPolicy = { LegalLinks.openPrivacyPolicy(context) },
+                onOpenTermsOfService = { LegalLinks.openTermsOfService(context) },
                 onManagePlan = { navController.navigate(NavRoutes.Subscription) },
+                onAccountDeleted = { mainViewModel.signOut() }
             )
         }
         composable<NavRoutes.Subscription> {

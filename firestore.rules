@@ -73,5 +73,10 @@ service cloud.firestore {
       allow read: if isOwner(userId);
       allow write: if false;
     }
+
+    // Server-only mapping from Play purchase tokens to Firebase users.
+    match /purchaseLookups/{tokenHash} {
+      allow read, write: if false;
+    }
   }
 }

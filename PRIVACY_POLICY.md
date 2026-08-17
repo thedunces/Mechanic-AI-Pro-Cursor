@@ -1,6 +1,6 @@
 # Privacy Policy — Mechanic AI Pro
 
-**Last updated:** August 1, 2026
+**Last updated:** August 14, 2026
 
 This Privacy Policy describes how Mechanic AI Pro collects, uses, and shares information about you when you use our mobile application.
 
@@ -42,7 +42,7 @@ We use Firebase Authentication, App Check, server-side subscription verification
 - You can use the app anonymously without linking an external account.
 - A durable email or Google account is required before buying Pro so the subscription can be restored.
 - You can manage or cancel a Pro subscription through Google Play.
-- Contact support to request account and associated-data deletion until the in-app deletion workflow is released.
+- You can delete your account and associated vehicles, diagnosis history, and usage records from Settings. Active Google Play subscriptions must be canceled in Google Play.
 
 ## 6. Children's Privacy
 
